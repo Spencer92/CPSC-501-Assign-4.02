@@ -18,6 +18,7 @@ namespace CPSC_501_Assign_4
             StreamReader streamReader = new StreamReader("Flute.wav");
             int mainSoundLength = 0;
             int environmentLength = 0;
+            int stuff;
 
 
 
