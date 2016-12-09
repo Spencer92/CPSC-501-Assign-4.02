@@ -18,11 +18,11 @@ namespace CPSC_501_Assign_4
 
         static void Main(string[] args)
         {
-            StreamReader audioData = new StreamReader("FluteDry.wav");
+            StreamReader audioData1;
+            StreamReader audioData2;
             StreamWriter output;
             int soundLength = 0;
             int environmentLength = 0;
-            int stuff;
             float[] newDryValues;
             float[] areaData;
             float[] convolvedData;
@@ -34,26 +34,56 @@ namespace CPSC_501_Assign_4
             float thing;
             Convolve convolver;
             float largest_value = 1;
+            char value;
+            byte byteValue;
 
-            while (!audioData.EndOfStream)
+
+            try
             {
-                audioData.Read();
+                audioData1 = new StreamReader(args[0]);
+            }
+            catch(FileNotFoundException e)
+            {
+                Console.WriteLine(args[0] + " not found, exiting");
+                return;
+            }
+            try
+            {
+                audioData2 = new StreamReader(args[1]);
+            }
+            catch(FileNotFoundException e)
+            {
+                Console.WriteLine(args[1] + " not found, exiting");
+                return;
+            }
+
+
+
+
+
+
+            //Get the length of the file
+            while (!audioData1.EndOfStream)
+            {
+                audioData1.Read();
                 soundLength++;
             }
 
-            audioData.Close();
-            audioData = new StreamReader("FluteDry.wav");
+            audioData1.Close();
+            audioData1 = new StreamReader(args[0]);
 
+            //As the values read are characters, the length needs to be halved
             newDryValues = new float[(soundLength / 2) + 1];
             length = (soundLength / 2) + 1;
 
-            while (!audioData.EndOfStream)
+            while (!audioData1.EndOfStream)
             {
-                digit = Convert.ToUInt16(audioData.Read());
+                //Get the data and 
+                digit = Convert.ToUInt16(audioData1.Read());
                 digit *= CHAR_SIZE;
-                if (!audioData.EndOfStream)
+                if (!audioData1.EndOfStream)
                 {
-                    digit += Convert.ToUInt16(audioData.Read());
+                    digit += Convert.ToUInt16(audioData1.Read());
                 }
 
                 shortDigit = (float)digit;
@@ -61,40 +91,34 @@ namespace CPSC_501_Assign_4
                 if (index < length)
                 {
                     newDryValues[index] = shortDigit / NEGATIVE_FLOAT;
-                    Console.WriteLine(newDryValues[index]);
                     index++;
                 }
             }
-//            Console.ReadLine();
 
 
-            audioData.Close();
-            audioData = new StreamReader("BIG HALL E001 M2S.wav");
 
-            for (int i = 0; i < newDryValues.Length; i++)
+            audioData1.Close();
+            audioData2 = new StreamReader(args[1]);
+
+            while(!audioData1.EndOfStream)
             {
-                Console.WriteLine(newDryValues[i]);
-            }
-
-            while(!audioData.EndOfStream)
-            {
-                audioData.Read();
+                audioData2.Read();
                 environmentLength++;
             }
-            audioData.Close();
+            audioData2.Close();
 
-            audioData = new StreamReader("BIG HALL E001 M2S.wav");
+            audioData2 = new StreamReader(args[1]);
             areaData = new float[(environmentLength / 2) + 1];
             length = environmentLength / 2 + 1;
 
             index = 0;
-            while (!audioData.EndOfStream)
+            while (!audioData1.EndOfStream)
             {
-                digit = Convert.ToUInt16(audioData.Read());
+                digit = Convert.ToUInt16(audioData1.Read());
                 digit *= CHAR_SIZE;
-                if (!audioData.EndOfStream)
+                if (!audioData1.EndOfStream)
                 {
-                    digit += Convert.ToUInt16(audioData.Read());
+                    digit += Convert.ToUInt16(audioData1.Read());
                 }
 
                 shortDigit = (float)digit;
@@ -103,25 +127,13 @@ namespace CPSC_501_Assign_4
                 {
                     thing = shortDigit / NEGATIVE_FLOAT;
                     areaData[index] = shortDigit / NEGATIVE_FLOAT;
-                    Console.Write(areaData[index]);
                     index++;
                 }
             }
-            audioData.Close();
+            audioData2.Close();
 
             convolvedData = new float[areaData.Length + newDryValues.Length - 1];
-            Console.WriteLine("Right before convolve");
 
-            /*            for(int i = 0; i < newDryValues.Length; i++)
-                        {
-                            Console.Write(newDryValues[i]);
-                        }*/
-
-//            Console.ReadLine();
-            for(int i = 0; i < areaData.Length; i++)
-            {
-                Console.WriteLine(areaData[i]);
-            }
 
             convolver = new Convolve();
             convolver.convolveSln(newDryValues, newDryValues.Length, areaData, areaData.Length, convolvedData, convolvedData.Length);
@@ -132,11 +144,12 @@ namespace CPSC_501_Assign_4
             output = new StreamWriter("output.wav");
 
 
+            //It could be that the audio data is greater than one, if so, it
+            //needs to be reduced
             for(int i = 0; i < convolvedData.Length; i++)
             {
                 if(convolvedData[i] > largest_value)
                 {
-                    Console.WriteLine("Too big: ");
                     largest_value = convolvedData[i];
                 }
             }
@@ -150,22 +163,21 @@ namespace CPSC_501_Assign_4
             {
                 convertedData[i] = Convert.ToInt16(convolvedData[i] * POSITIVE_FLOAT);
             }
-            char value;
-            byte byteValue;
+
             for(int i = 0; i < length; i++)
             {
                 byteValue = Convert.ToByte(convertedData[i] / CHAR_SIZE);
                 value = (char) byteValue;
-                Console.WriteLine(value);
+
                 output.Write(value);
                 byteValue = Convert.ToByte(convertedData[i]%256);
                 value = (char)byteValue;
-                Console.WriteLine(value);
+
                 output.Write(value);
 
             }
 
-            Console.Write("End of program");
+            Console.Write("End of program, enter key to exit");
             output.Close();
             Console.Read();
       

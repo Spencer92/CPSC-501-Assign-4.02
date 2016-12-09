@@ -24,49 +24,18 @@ namespace CPSC_501_Assign_4
             {
                 y[n] = 0.0F; //Do the convoltion;
             }
-            Console.ReadLine();
-            for(int i = 0; i < x.Length; i++)
-            {
-                Console.Write(x[i]);
-            }
 
-            Console.ReadLine();
-            for(int i = 0; i < h.Length; i++)
-            {
-                Console.Write(h[i]);
-            }
 
 
             //Outer loop: process each input value x[n] in turn
-            Console.WriteLine("Length of y: " + y.Length);
-            Console.WriteLine("Length of n + m" + (n + m));
-//           float stuff = h[0];
-//            stuff = x[0];
-
-//            try
-//            {
-                for (n = 0; n < N; n++)
-                {
+            for (n = 0; n < N; n++)
+            {
                 //Inner loop: process x[n] with each sample of h[]
                 for (m = 0; m < M; m++)
                 {
-                        y[n + m]
-                            += x[n]
-                            * h[m];
-                    }
+                    y[n + m] += x[n] * h[m];
                 }
-//            }
-/*            catch(IndexOutOfRangeException e)
-            {
-                Console.WriteLine("y is " + y.Length);
-                Console.WriteLine("n + m is " + (m + n));
-                Console.WriteLine("x is " + x.Length);
-                Console.WriteLine("n is " + n);
-                Console.WriteLine("h is " + h.Length);
-                Console.WriteLine("m is " + m);
-                Console.WriteLine("P is " + P);
-                Console.Read();
-            }*/
+            }
         }
 
     }
