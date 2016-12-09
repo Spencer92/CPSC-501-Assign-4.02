@@ -8,7 +8,7 @@ using System.IO;
 namespace CPSC_501_Assign_4
 {
 
-    class Program
+    class AudioOptimization
     {
         static int BYTE = 16;
         static ushort CHAR_SIZE = 256;
@@ -36,11 +36,13 @@ namespace CPSC_501_Assign_4
             float largest_value = 1;
             char value;
             byte byteValue;
+            char[] preValuesData = new char[24];
+            char[] preValuesEnv = new char[24];
 
 
             try
             {
-                audioData1 = new StreamReader(args[0]);
+                audioData1 = new StreamReader("FluteDry.wav");
             }
             catch(FileNotFoundException e)
             {
@@ -49,7 +51,7 @@ namespace CPSC_501_Assign_4
             }
             try
             {
-                audioData2 = new StreamReader(args[1]);
+                audioData2 = new StreamReader("BIG HALL E001 M2S.wav");
             }
             catch(FileNotFoundException e)
             {
@@ -59,7 +61,10 @@ namespace CPSC_501_Assign_4
 
 
 
-
+            for(int i = 0; i < preValuesData.Length; i++)
+            {
+                preValuesData[i] = Convert.ToChar(audioData1.Read());
+            }
 
 
             //Get the length of the file
@@ -70,15 +75,20 @@ namespace CPSC_501_Assign_4
             }
 
             audioData1.Close();
-            audioData1 = new StreamReader(args[0]);
+            audioData1 = new StreamReader("FluteDry.wav");
 
             //As the values read are characters, the length needs to be halved
             newDryValues = new float[(soundLength / 2) + 1];
             length = (soundLength / 2) + 1;
 
+            for(int i = 0; i < preValuesData.Length; i++)
+            {
+                audioData1.Read();
+            }
+
             while (!audioData1.EndOfStream)
             {
-                //Get the data and 
+                //Get the data and convert it
                 digit = Convert.ToUInt16(audioData1.Read());
                 digit *= CHAR_SIZE;
                 if (!audioData1.EndOfStream)
@@ -98,27 +108,33 @@ namespace CPSC_501_Assign_4
 
 
             audioData1.Close();
-            audioData2 = new StreamReader(args[1]);
+            
 
-            while(!audioData1.EndOfStream)
+            for (int i = 0; i < preValuesEnv.Length; i++)
+            {
+                preValuesEnv[i] = Convert.ToChar(audioData2.Read());
+            }
+
+
+            while(!audioData2.EndOfStream)
             {
                 audioData2.Read();
                 environmentLength++;
             }
             audioData2.Close();
 
-            audioData2 = new StreamReader(args[1]);
+            audioData2 = new StreamReader("BIG HALL E001 M2S.wav");
             areaData = new float[(environmentLength / 2) + 1];
             length = environmentLength / 2 + 1;
 
             index = 0;
-            while (!audioData1.EndOfStream)
+            while (!audioData2.EndOfStream)
             {
-                digit = Convert.ToUInt16(audioData1.Read());
+                digit = Convert.ToUInt16(audioData2.Read());
                 digit *= CHAR_SIZE;
-                if (!audioData1.EndOfStream)
+                if (!audioData2.EndOfStream)
                 {
-                    digit += Convert.ToUInt16(audioData1.Read());
+                    digit += Convert.ToUInt16(audioData2.Read());
                 }
 
                 shortDigit = (float)digit;
@@ -162,6 +178,11 @@ namespace CPSC_501_Assign_4
             for(int i = 0; i < convertedData.Length; i++)
             {
                 convertedData[i] = Convert.ToInt16(convolvedData[i] * POSITIVE_FLOAT);
+            }
+
+            for(int i = 0; i < preValuesData.Length; i++)
+            {
+                output.Write(preValuesData[i]);
             }
 
             for(int i = 0; i < length; i++)

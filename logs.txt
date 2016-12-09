@@ -1,0 +1,35 @@
+commit cd31e805e2e15ce8dbb603170653b216e3e53d1f
+Author: Spencer Maslen <smhmaslen@gmail.com>
+Date:   Thu Dec 8 17:52:48 2016 -0700
+
+    Added some comments. Removed helper Output.
+
+commit 4c5aa8c001690f1d3974643670804dd3643d61c4
+Author: Spencer <smhmaslen@gmail.com>
+Date:   Wed Dec 7 19:13:47 2016 -0700
+
+    Figuring things out.
+
+commit aec93f8f502f72f59e7db3800c88701769e1d2ab
+Author: Spencer Maslen <smhmaslen@gmail.com>
+Date:   Wed Dec 7 15:45:51 2016 -0700
+
+    Staring to add convolve
+
+commit 8f6809675f96101880be6d829862c04fc1a50366
+Author: Spencer Maslen <smhmaslen@gmail.com>
+Date:   Wed Dec 7 12:54:53 2016 -0700
+
+    Initial Commit
+
+commit 1bc9daa7cccf8ed85179206bc6723b3ade1ef125
+Author: Spencer Maslen <Spencer Maslen@DESKTOP-8IPIKTH>
+Date:   Wed Dec 7 12:52:11 2016 -0700
+
+    Add project files.
+
+commit 901b422a9036fcf97b3e9620d30fa70ca86ce688
+Author: Spencer Maslen <Spencer Maslen@DESKTOP-8IPIKTH>
+Date:   Wed Dec 7 12:52:09 2016 -0700
+
+    Add .gitignore and .gitattributes.
