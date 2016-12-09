@@ -8,8 +8,28 @@ using System.IO;
 namespace CPSC_501_Assign_4
 {
 
+
+
     class AudioOptimization
     {
+        private class Wavfile_header
+        {
+            public char[] riff_tag = new char[4];
+            public int riff_length;
+            public char[] wave_tag = new char[4];
+            public char[] fmt_tag = new char[4];
+            public int fmt_length;
+            public short auido_format;
+            public short num_channels;
+            public int sample_rate;
+            public int byte_rate;
+            public short block_align;
+            public short bits_per_sample;
+            public char[] data_tag = new char[4];
+            public int data_length;
+        }
+
+
         static int BYTE = 16;
         static ushort CHAR_SIZE = 256;
         static uint NEGATIVE_FLOAT = 32768;
@@ -38,7 +58,9 @@ namespace CPSC_501_Assign_4
             byte byteValue;
             char[] preValuesData = new char[24];
             char[] preValuesEnv = new char[24];
-
+            Wavfile_header header = new Wavfile_header();
+            String convertToString;
+            int[] size_amount = new int[4];
 
             try
             {
@@ -46,7 +68,8 @@ namespace CPSC_501_Assign_4
             }
             catch(FileNotFoundException e)
             {
-                Console.WriteLine(args[0] + " not found, exiting");
+                Console.WriteLine(/*args[0] + */"FluteDry not found, exiting");
+                Console.Read();
                 return;
             }
             try
@@ -55,10 +78,41 @@ namespace CPSC_501_Assign_4
             }
             catch(FileNotFoundException e)
             {
-                Console.WriteLine(args[1] + " not found, exiting");
+                Console.WriteLine(/*args[1] + */"BIG HALL not found, exiting");
+                Console.Read();
                 return;
             }
 
+
+            for(int i = 0; i < header.riff_tag.Length; i++)
+            {
+                header.riff_tag[i] = Convert.ToChar(audioData1.Read());
+            }
+            convertToString = new string(header.riff_tag);
+
+            if(!convertToString.Equals("RIFF"))
+            {
+                Console.WriteLine("Didn't find RIFF, Found " + header.riff_tag.ToString());
+                Console.WriteLine("Press any key to exit");
+                Console.Read();
+                return;
+            }
+
+            for(int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.Read();
+            }
+
+            header.riff_length = (size_amount[0] * 0xFFFFFF) + (size_amount[1] * 0xFFFF) + (size_amount[2] * 0xFF) + size_amount[3];
+
+            Console.Write("Size_amount is ");
+            for(int i = 0; i < size_amount.Length; i++)
+            {
+                Console.Write(size_amount[i] + " ");
+            }
+            Console.Write("\n riff_length is ");
+            Console.WriteLine(header.riff_length);
+            Console.Read();
 
 
             for(int i = 0; i < preValuesData.Length; i++)
