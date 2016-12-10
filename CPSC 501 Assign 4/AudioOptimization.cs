@@ -19,7 +19,7 @@ namespace CPSC_501_Assign_4
             public char[] wave_tag = new char[4];
             public char[] fmt_tag = new char[4];
             public int fmt_length;
-            public short auido_format;
+            public short audio_format;
             public short num_channels;
             public int sample_rate;
             public int byte_rate;
@@ -38,16 +38,17 @@ namespace CPSC_501_Assign_4
 
         static void Main(string[] args)
         {
-            StreamReader audioData1;
-            StreamReader audioData2;
-            StreamWriter output;
+            BinaryReader audioData1;
+            BinaryReader audioData2;
+            BinaryWriter output;
             int soundLength = 0;
             int environmentLength = 0;
             float[] newDryValues;
             float[] areaData;
             float[] convolvedData;
             short[] convertedData;
-            ushort digit;
+            ushort first_part_of_digit;
+            ushort second_part_of_digit;
             float shortDigit;
             int index = 0;
             int length;
@@ -61,12 +62,15 @@ namespace CPSC_501_Assign_4
             Wavfile_header header = new Wavfile_header();
             String convertToString;
             int[] size_amount = new int[4];
+            int audioData1Length;
+            int audioData2Length;
+            byte[] byteData;
 
             try
             {
-                audioData1 = new StreamReader("FluteDry.wav");
+                audioData1 = new BinaryReader(File.OpenRead("FluteDry.wav"));
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 Console.WriteLine(/*args[0] + */"FluteDry not found, exiting");
                 Console.Read();
@@ -74,23 +78,25 @@ namespace CPSC_501_Assign_4
             }
             try
             {
-                audioData2 = new StreamReader("BIG HALL E001 M2S.wav");
+                audioData2 = new BinaryReader(File.OpenRead("BIG HALL E001 M2S.wav"));
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 Console.WriteLine(/*args[1] + */"BIG HALL not found, exiting");
                 Console.Read();
                 return;
             }
 
+            audioData1Length = (int)audioData1.BaseStream.Length;
+            audioData2Length = (int)audioData2.BaseStream.Length;
 
-            for(int i = 0; i < header.riff_tag.Length; i++)
+            for (int i = 0; i < header.riff_tag.Length; i++)
             {
                 header.riff_tag[i] = Convert.ToChar(audioData1.Read());
             }
             convertToString = new string(header.riff_tag);
 
-            if(!convertToString.Equals("RIFF"))
+            if (!convertToString.Equals("RIFF"))
             {
                 Console.WriteLine("Didn't find RIFF, Found " + header.riff_tag.ToString());
                 Console.WriteLine("Press any key to exit");
@@ -98,59 +104,294 @@ namespace CPSC_501_Assign_4
                 return;
             }
 
-            for(int i = 0; i < size_amount.Length; i++)
+            for (int i = 0; i < size_amount.Length; i++)
             {
-                size_amount[i] = audioData1.Read();
+                size_amount[i] = Convert.ToChar(audioData1.ReadByte());
+                Console.WriteLine("What it is: " + size_amount[i]);
             }
 
-            header.riff_length = (size_amount[0] * 0xFFFFFF) + (size_amount[1] * 0xFFFF) + (size_amount[2] * 0xFF) + size_amount[3];
+            Console.WriteLine(size_amount[0]);
+            Console.WriteLine(size_amount[1] * 0x100);
+            Console.WriteLine(size_amount[2] * 0x10000);
+            Console.WriteLine(size_amount[3] * 0x1000000);
+
+            header.riff_length = (size_amount[0]) + (size_amount[1] * 0x100) + (size_amount[2] * 0x10000) + (size_amount[3] * 0x1000000);
 
             Console.Write("Size_amount is ");
-            for(int i = 0; i < size_amount.Length; i++)
+            for (int i = 0; i < size_amount.Length; i++)
             {
                 Console.Write(size_amount[i] + " ");
             }
             Console.Write("\n riff_length is ");
             Console.WriteLine(header.riff_length);
+
+
+            for (int i = 0; i < header.wave_tag.Length; i++)
+            {
+                header.wave_tag[i] = Convert.ToChar(audioData1.ReadByte());
+            }
+
+            for (int i = 0; i < header.wave_tag.Length; i++)
+            {
+                Console.WriteLine(header.wave_tag[i]);
+            }
+
+            for (int i = 0; i < header.fmt_tag.Length; i++)
+            {
+                header.fmt_tag[i] = Convert.ToChar(audioData1.ReadByte());
+            }
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+
+            header.fmt_length = size_amount[0] + (size_amount[1] * 0x100) + (size_amount[2] * 0x10000) + (size_amount[3] * 0x1000000);
+
+            Console.WriteLine("fmt_length: " + header.fmt_length);
+
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+
+            header.audio_format = Convert.ToInt16(size_amount[0] + (size_amount[1] * 0x100));
+            header.num_channels = Convert.ToInt16(size_amount[2] + (size_amount[3] * 0x100));
+
+            Console.WriteLine("audio_format: " + header.audio_format);
+            Console.WriteLine("num_channels: " + header.num_channels);
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+
+            header.sample_rate = size_amount[0] + (size_amount[1] * 0x100) + (size_amount[2] * 0x10000) + (size_amount[3] * 0x1000000);
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+            header.byte_rate = size_amount[0] + (size_amount[1] * 0x100) + (size_amount[2] * 0x10000) + (size_amount[3] * 0x1000000);
+
+            Console.WriteLine(header.sample_rate);
+            Console.WriteLine(header.byte_rate);
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                Console.WriteLine(size_amount[i]);
+            }
+
+            header.block_align = Convert.ToInt16(size_amount[0] + (size_amount[1] * 0x100));
+            header.bits_per_sample = Convert.ToInt16(size_amount[2] + (size_amount[3] * 0x100));
+
+            Console.WriteLine("block_align: " + header.block_align);
+            Console.WriteLine("bits_per_sample: " + header.bits_per_sample);
+
+            for (int i = 0; i < header.data_tag.Length; i++)
+            {
+                header.data_tag[i] = Convert.ToChar(audioData1.ReadByte());
+                Console.Write(header.data_tag[i]);
+            }
+
+            for (int i = 0; i < size_amount.Length; i++)
+            {
+                size_amount[i] = audioData1.ReadByte();
+            }
+
+            header.data_length = (size_amount[0]) + (size_amount[1] * 0x100) + (size_amount[2] * 0x10000) + (size_amount[3] * 0x1000000);
+
+            Console.WriteLine("\n" + header.data_length);
+
+            output = new BinaryWriter(File.OpenWrite("output.wav"));
+
+            for (int i = 0; i < header.riff_tag.Length; i++)
+            {
+                output.Write(header.riff_tag[i]);
+            }
+
+
+
+            size_amount[0] = header.riff_length / 0x1000000;
+            size_amount[1] = (header.riff_length / 0x10000) & 0xFF;
+            size_amount[2] = (header.riff_length / 0x100) & 0xFF;
+            size_amount[3] = header.riff_length & 0xFF;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                output.Write(Convert.ToByte(size_amount[i]));
+            }
+
+            for (int i = 0; i < header.wave_tag.Length; i++)
+            {
+                output.Write(Convert.ToChar(header.wave_tag[i]));
+            }
+
+            for (int i = 0; i < header.fmt_tag.Length; i++)
+            {
+                output.Write(Convert.ToChar(header.fmt_tag[i]));
+            }
+
+            size_amount[0] = header.fmt_length / 0x1000000;
+            size_amount[1] = (header.fmt_length / 0x10000) & 0xFF;
+            size_amount[2] = (header.fmt_length / 0x100) & 0xFF;
+            size_amount[3] = header.fmt_length & 0xFF;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                output.Write(Convert.ToByte(size_amount[i]));
+            }
+
+
+            size_amount[0] = header.audio_format / 0x100;
+            size_amount[1] = header.audio_format & 0xFF;
+            size_amount[2] = header.num_channels / 0x100;
+            size_amount[3] = header.num_channels & 0xFF;
+
+            output.Write(Convert.ToByte(size_amount[1]));
+            output.Write(Convert.ToByte(size_amount[0]));
+            output.Write(Convert.ToByte(size_amount[3]));
+            output.Write(Convert.ToByte(size_amount[2]));
+
+            size_amount[0] = header.sample_rate / 0x1000000;
+            size_amount[1] = (header.sample_rate / 0x10000) & 0xFF;
+            size_amount[2] = (header.sample_rate / 0x100) & 0xFF;
+            size_amount[3] = header.sample_rate & 0xFF;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                output.Write(Convert.ToByte(size_amount[i]));
+            }
+
+            size_amount[0] = header.byte_rate / 0x1000000;
+            size_amount[1] = (header.byte_rate / 0x10000) & 0xFF;
+            size_amount[2] = (header.byte_rate / 0x100) & 0xFF;
+            size_amount[3] = header.byte_rate & 0xFF;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                output.Write(Convert.ToByte(size_amount[i]));
+            }
+
+            size_amount[0] = header.block_align / 0x100;
+            size_amount[1] = header.block_align & 0xFF;
+            size_amount[2] = header.bits_per_sample / 0x100;
+            size_amount[3] = header.bits_per_sample & 0xFF;
+
+            output.Write(Convert.ToByte(size_amount[1]));
+            output.Write(Convert.ToByte(size_amount[0]));
+            output.Write(Convert.ToByte(size_amount[3]));
+            output.Write(Convert.ToByte(size_amount[2]));
+
+            for (int i = 0; i < header.data_tag.Length; i++)
+            {
+                output.Write(Convert.ToChar(header.data_tag[i]));
+            }
+
+            size_amount[0] = header.data_length / 0x1000000;
+            size_amount[1] = (header.data_length / 0x10000) & 0xFF;
+            size_amount[2] = (header.data_length / 0x100) & 0xFF;
+            size_amount[3] = header.data_length & 0xFF;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                output.Write(Convert.ToByte(size_amount[i]));
+            }
+
+
+            for(int i = 0; i < 23; i++)
+            {
+                audioData2.ReadByte();
+            }
+
+
+            byteData = new byte[audioData1Length - 44];
+
+            for(int i = 0; i < audioData1Length - 44; i++)
+            {
+                byteData[i] = audioData1.ReadByte();
+            }
+
+            //As float = 2 bytes
+            newDryValues = new float[(byteData.Length / 2) + 1];
+            index = 0;
+            for (int i = 0; i < byteData.Length; i++)
+            {
+                first_part_of_digit = Convert.ToUInt16(byteData[i]);
+                i++;
+                second_part_of_digit = 0;
+                if (i < byteData.Length)
+                {
+                    second_part_of_digit = Convert.ToUInt16(byteData[i]);
+                    second_part_of_digit *= 0x100;
+                }
+                first_part_of_digit += second_part_of_digit;
+                if(index < newDryValues.Length)
+                {
+                    newDryValues[index] = (float)first_part_of_digit / 0x8000;
+                }
+                else
+                {
+                    break; //Can't fill any longer
+                }
+            }
+
+
+
+/*            for(int i = 0; i < byteData.Length; i++)
+            {
+                output.Write(Convert.ToByte(byteData[i]));
+            }*/
+
+            output.Close();
             Console.Read();
 
 
-            for(int i = 0; i < preValuesData.Length; i++)
+
+
+            for (int i = 0; i < preValuesData.Length; i++)
             {
                 preValuesData[i] = Convert.ToChar(audioData1.Read());
             }
 
 
             //Get the length of the file
-            while (!audioData1.EndOfStream)
+/*            while (!audioData1.)
             {
                 audioData1.Read();
                 soundLength++;
             }
 
             audioData1.Close();
-            audioData1 = new StreamReader("FluteDry.wav");
+            audioData1 = new StreamReader("FluteDry.wav");*/
 
             //As the values read are characters, the length needs to be halved
             newDryValues = new float[(soundLength / 2) + 1];
-            length = (soundLength / 2) + 1;
+            length = (audioData1Length / 2) + 1;
 
             for(int i = 0; i < preValuesData.Length; i++)
             {
                 audioData1.Read();
             }
 
-            while (!audioData1.EndOfStream)
+            for (int i = 0; i < audioData1Length; i++)
             {
                 //Get the data and convert it
-                digit = Convert.ToUInt16(audioData1.Read());
-                digit *= CHAR_SIZE;
-                if (!audioData1.EndOfStream)
+                first_part_of_digit = Convert.ToUInt16(audioData1.Read());
+                first_part_of_digit *= CHAR_SIZE;
+                if (i < audioData1Length)
                 {
-                    digit += Convert.ToUInt16(audioData1.Read());
+                    first_part_of_digit += Convert.ToUInt16(audioData1.Read());
+                    i++;
                 }
 
-                shortDigit = (float)digit;
+                shortDigit = (float)first_part_of_digit;
 
                 if (index < length)
                 {
@@ -170,28 +411,29 @@ namespace CPSC_501_Assign_4
             }
 
 
-            while(!audioData2.EndOfStream)
+ /*           while(!audioData2.EndOfStream)
             {
                 audioData2.Read();
                 environmentLength++;
             }
             audioData2.Close();
 
-            audioData2 = new StreamReader("BIG HALL E001 M2S.wav");
-            areaData = new float[(environmentLength / 2) + 1];
-            length = environmentLength / 2 + 1;
+            audioData2 = new StreamReader("BIG HALL E001 M2S.wav");*/
+            areaData = new float[(audioData2Length / 2) + 1];
+            length = audioData2Length / 2 + 1;
 
             index = 0;
-            while (!audioData2.EndOfStream)
+            for (int i = 0; i < audioData2Length; i++)
             {
-                digit = Convert.ToUInt16(audioData2.Read());
-                digit *= CHAR_SIZE;
-                if (!audioData2.EndOfStream)
+                first_part_of_digit = Convert.ToUInt16(audioData2.Read());
+                first_part_of_digit *= CHAR_SIZE;
+                if (i < audioData2Length)
                 {
-                    digit += Convert.ToUInt16(audioData2.Read());
+                    first_part_of_digit += Convert.ToUInt16(audioData2.Read());
+                    i++;
                 }
 
-                shortDigit = (float)digit;
+                shortDigit = (float)first_part_of_digit;
 
                 if (index < length)
                 {
@@ -211,7 +453,7 @@ namespace CPSC_501_Assign_4
             convertedData = new short[convolvedData.Length];
             length = convertedData.Length;
 
-            output = new StreamWriter("output.wav");
+            output = new BinaryWriter(File.OpenWrite("output.wav"));
 
 
             //It could be that the audio data is greater than one, if so, it
