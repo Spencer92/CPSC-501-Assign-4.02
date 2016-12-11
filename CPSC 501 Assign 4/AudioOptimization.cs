@@ -64,7 +64,10 @@ namespace CPSC_501_Assign_4
             int[] size_amount = new int[4];
             int audioData1Length;
             int audioData2Length;
-            byte[] byteData;
+            byte[] byteDataAudio;
+            byte[] byteDataEnv;
+            short actualNumber;
+            byte[] convolvedDataByte;
 
             try
             {
@@ -305,36 +308,76 @@ namespace CPSC_501_Assign_4
             }
 
 
-            for(int i = 0; i < 23; i++)
+            for (int i = 0; i < 44; i++)
             {
                 audioData2.ReadByte();
             }
 
 
-            byteData = new byte[audioData1Length - 44];
+            byteDataAudio = new byte[audioData1Length - 44];
 
-            for(int i = 0; i < audioData1Length - 44; i++)
+            for (int i = 0; i < audioData1Length - 44; i++)
             {
-                byteData[i] = audioData1.ReadByte();
+                byteDataAudio[i] = audioData1.ReadByte();
             }
 
             //As float = 2 bytes
-            newDryValues = new float[(byteData.Length / 2) + 1];
+            newDryValues = new float[(byteDataAudio.Length / 2) + 1];
             index = 0;
-            for (int i = 0; i < byteData.Length; i++)
+            for (int i = 0; i < byteDataAudio.Length; i++)
             {
-                first_part_of_digit = Convert.ToUInt16(byteData[i]);
+                first_part_of_digit = Convert.ToUInt16(byteDataAudio[i]);
                 i++;
                 second_part_of_digit = 0;
-                if (i < byteData.Length)
+                if (i < byteDataAudio.Length)
                 {
-                    second_part_of_digit = Convert.ToUInt16(byteData[i]);
+                    second_part_of_digit = Convert.ToUInt16(byteDataAudio[i]);
                     second_part_of_digit *= 0x100;
                 }
                 first_part_of_digit += second_part_of_digit;
-                if(index < newDryValues.Length)
+                if (index < newDryValues.Length)
                 {
-                    newDryValues[index] = (float)first_part_of_digit / 0x8000;
+                    actualNumber = (short)first_part_of_digit;
+                    newDryValues[index] = (float)actualNumber / 0x8000;
+                    index++;
+                }
+                else
+                {
+                    break; //Can't fill any longer
+                }
+            }
+
+            for (int i = 0; i < newDryValues.Length; i++)
+            {
+                Console.WriteLine(newDryValues[i]);
+            }
+
+            byteDataEnv = new byte[audioData2Length - 44];
+
+            for (int i = 0; i < audioData2Length - 44; i++)
+            {
+                byteDataEnv[i] = audioData2.ReadByte();
+            }
+
+            areaData = new float[(byteDataEnv.Length / 2) + 1];
+
+            index = 0;
+            for (int i = 0; i < byteDataEnv.Length; i++)
+            {
+                first_part_of_digit = Convert.ToUInt16(byteDataAudio[i]);
+                i++;
+                second_part_of_digit = 0;
+                if (i < byteDataEnv.Length)
+                {
+                    second_part_of_digit = Convert.ToUInt16(byteDataAudio[i]);
+                    second_part_of_digit *= 0x100;
+                }
+                first_part_of_digit += second_part_of_digit;
+                if (index < areaData.Length)
+                {
+                    actualNumber = (short)first_part_of_digit;
+                    areaData[index] = (float)actualNumber / 0x8000;
+                    index++;
                 }
                 else
                 {
@@ -344,12 +387,87 @@ namespace CPSC_501_Assign_4
 
 
 
-/*            for(int i = 0; i < byteData.Length; i++)
+            /*            for(int i = 0; i < byteData.Length; i++)
+                        {
+                            output.Write(Convert.ToByte(byteData[i]));
+                        }*/
+
+            convolvedData = new float[newDryValues.Length + areaData.Length - 1];
+
+            convolver = new Convolve();
+            convolver.convolveSln(newDryValues, newDryValues.Length, areaData, areaData.Length, convolvedData, convolvedData.Length);
+
+            for (int i = 0; i < convolvedData.Length; i++)
             {
-                output.Write(Convert.ToByte(byteData[i]));
-            }*/
+                Console.WriteLine(convolvedData[i]);
+            }
+
+            convertedData = new short[convolvedData.Length];
+
+            for (int i = 0; i < convolvedData.Length; i++)
+            {
+                if (convolvedData[i] > largest_value)
+                {
+                    largest_value = convolvedData[i];
+                }
+            }
+
+            for (int i = 0; i < convolvedData.Length; i++)
+            {
+                convolvedData[i] /= largest_value;
+            }
+
+            for (int i = 0; i < convolvedData.Length; i++)
+            {
+                convertedData[i] = Convert.ToInt16(convolvedData[i] * 0x7FFF);
+            }
+
+            for (int i = 0; i < convertedData.Length; i++)
+            {
+                Console.WriteLine(convertedData[i]);
+            }
+
+            convolvedDataByte = new Byte[(convertedData.Length * 2) + 1];
+
+            index = 0;
+            for (int i = 0; i < convolvedDataByte.Length; i++)
+            {
+                if (index < convertedData.Length)
+                {
+                    convolvedDataByte[i] = Convert.ToByte(convertedData[index] & 0xFF);
+                }
+                else
+                {
+                    break;
+                }
+                i++;
+                if (i < convolvedDataByte.Length)
+                {
+                    if (index < convertedData.Length)
+                    {
+                        Console.WriteLine("{0:X}", convertedData[index]);
+                        Console.WriteLine("{0:X}", (convertedData[index] / 0x100) & 0xFF);
+
+                        convolvedDataByte[i] = Convert.ToByte((convertedData[index] / 0x100) & 0xFF);
+                        index++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+            }
+
+            for (int i = 0; i < convolvedDataByte.Length; i++)
+            {
+                output.Write(convolvedDataByte[i]);
+            }
+
+            Console.WriteLine("Done");
 
             output.Close();
+            return;
             Console.Read();
 
 
